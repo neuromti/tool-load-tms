@@ -7,5 +7,5 @@ This repo contains the source code of the objects required to load the `.mat`-fi
 % add the installation directory to the path
 addpath("/installation/directory")
 % load data
-[data, fs, chan_names, stim_onset, stim_code]  = load_mat(fname)
+[data, fs, chan_names, stim_onset, stim_code]  = tms.load_mat(fname)
 ```
