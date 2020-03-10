@@ -1,11 +1,7 @@
-This repo contains the source code of the objects required to load the `.mat`-files of the objects recorded with the UKT-Toolbox.
+Tools to load TMS data from the legacy matlab protocols into Matlab or Python
 
 ### Installation
 
-```matlab
+clone the repository and `pip install -e .`
 
-% add the installation directory to the path
-addpath("/installation/directory")
-% load data
-[data, fs, chan_names, stim_onset, stim_code]  = tms.load_mat(fname)
-```
+Requires a Matlab installation with valid registration.
