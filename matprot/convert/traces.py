@@ -60,7 +60,7 @@ def create_matlab_commands(matfile: FileName) -> Path:
     """
     template = """
     addpath("{addpath}")
-    [data, fs, chan_names, stim_onset, stim_code, mso, subid, recdate] = tms.load_all(\"{fname}\");
+    [data, fs, chan_names, stim_onset, stim_code, mso, subid, recdate] = load_all(\"{fname}\");
     save(\"{savefile}\", "data", "fs", "chan_names", "stim_onset", "stim_code", "mso", "subid", "recdate");
     """
     matfile = Path(matfile).expanduser().absolute()

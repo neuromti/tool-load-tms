@@ -1,5 +1,5 @@
 from distutils.core import setup
-
+import setuptools
 from os import path
 
 this_directory = path.abspath(path.dirname(__file__))
@@ -16,7 +16,8 @@ setup(
     url="https://github.com/translationalneurosurgery/tool-load-tms.git",
     download_url="https://github.com/translationalneurosurgery/tool-load-tms.git",
     license="MIT",
-    packages=["matprot", "matprot.convert"],
+    packages=setuptools.find_packages(),
+    package_data={"matprot": ["ml/*.m"]},
     entry_points={"console_scripts": [],},
     classifiers=[
         "Development Status :: 3 - Alpha",

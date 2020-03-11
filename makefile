@@ -1,13 +1,18 @@
 SHELL := /bin/bash
 
-.PHONY: clean test
+.PHONY: clean test build
 .ONESHELL:
 
-test:
+
+clean:
+	rm -rf dist */*.egg-info *.egg-info  build
+	rm -rf .env
+
+build: clean
+	python setup.py sdist bdist_wheel
+
+test: build
 	tests/run_tests
 
 
 
-.PHONY: clean
-clean:
-	rm -rf .env
