@@ -59,11 +59,15 @@ def create_matlab_commands(matfile: FileName) -> Path:
     this matlab code would load the object and save it as simpler .mat-file readable with python
     """
     template = """
-    addpath("/media/rgugg/tools/matlab/mltools")
-    [data, fs, chan_names, stim_onset, stim_code] = tms.load_mat(\"{fname}\");
-    save(\"{savefile}\", "data", "fs", "chan_names", "stim_onset", "stim_code");
+    addpath("{addpath}")
+    [data, fs, chan_names, stim_onset, stim_code, mso, subid, recdate] = tms.load_all(\"{fname}\");
+    save(\"{savefile}\", "data", "fs", "chan_names", "stim_onset", "stim_code", "mso", "subid", "recdate");
     """
-    content = template.format(fname=matfile, savefile=tmpdir.matfile)
+    matfile = Path(matfile).expanduser().absolute()
+    if not matfile.exists():
+        raise FileNotFoundError(f"{matfile} not found")
+    addpath = str(Path(__file__).parent.parent / "ml")
+    content = template.format(addpath=addpath, fname=matfile, savefile=tmpdir.matfile)
     tmpdir.refresh()
     with tmpdir.mfile.open("w") as f:
         print(content, file=f)
@@ -200,3 +204,4 @@ def convert_mat_to_traces(
         post_in_ms=post_in_ms,
     )
     return traces
+

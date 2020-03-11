@@ -1,15 +1,51 @@
 import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import Element
 import numpy as np
-from matprot.types import TargetCoords
-from typing import List
+from matprot.types import Coordinate
+from typing import List, Tuple
+from numpy.linalg import norm
+from pathlib import Path
+
+DEFAULT_TARGETS_RIGHT = [
+    [45.07, -51.36, 54.43],
+    [39.63, -45.3, 57.48],
+    [34.29, -38.85, 61.55],
+    [27.47, -32.06, 63.71],
+    [20.29, -24.64, 65.73],
+    [12.43, -15.51, 66.56],
+    [3.95, -6.9, 65.43],
+    [10.84, 0.45, 61.7],
+    [18.91, -7.97, 62.27],
+    [26.57, -16.74, 61.79],
+    [33.24, -25.75, 59.61],
+    [39.64, -32.54, 57.5],
+    [45.06, -38.98, 54.41],
+    [50.52, -45.06, 51.95],
+    [54.13, -39.09, 47.69],
+    [50.54, -32.98, 51.98],
+    [45.05, -26.6, 54.4],
+    [38.53, -18.32, 55.69],
+    [32.11, -9.56, 57.54],
+    [24.68, -1.18, 57.79],
+    [16.98, 6.94, 57.43],
+    [22.79, 13.11, 53.76],
+    [30.09, 5.15, 53.82],
+    [36.57, -3.38, 52.51],
+    [42.61, -11.82, 50.84],
+    [48.91, -19.84, 49.83],
+    [53.22, -27.68, 46.59],
+    [57.34, -33.63, 43.66],
+    [61.73, -28.4, 41.43],
+    [57.32, -21.44, 43.64],
+    [52.67, -13.48, 45.93],
+    [46.59, -5.77, 46.77],
+    [40.62, 2.25, 47.94],
+    [33.74, 9.75, 47.9],
+    [27.9, 18.49, 49.77],
+]
 
 
-def parse_gumMarker(root=None):
-    if root is None:
-        tree = ET.parse(
-            "/media/rgugg/projects/projects/Stroke/daten/tms-maps/coordinates/SaCe/pre3/contralesional.xml"
-        )
-        root = tree.getroot()
+def parse_gumMarker(root: Element):
     entries = []
     for child in root:
         el = child[0][0][0][0]
@@ -19,12 +55,7 @@ def parse_gumMarker(root=None):
     return np.atleast_2d(entries)
 
 
-def parse_trigMarker(root=None):
-    if root is None:
-        tree = ET.parse(
-            "/media/rgugg/projects/projects/Stroke/daten/tms-maps/coordinates/SaCe/pre1/contralesional.xml"
-        )
-        root = tree.getroot()
+def parse_trigMarker(root: Element):
 
     entries = []
     for child in root:
@@ -52,14 +83,7 @@ def parse(root) -> List[List[float]]:
     return entries.tolist()
 
 
-def coordlist_to_targetcoords(entries: List[List[float]]) -> TargetCoords:
-    coords: TargetCoords = dict()
-    for idx, coord in enumerate(entries.tolist()):
-        coords[idx] = coord
-    return coords
-
-
-def get_M1(hemisphere="L", cosys="MNI") -> List[float]:
+def get_M1(hemisphere="L", cosys="MNI") -> Coordinate:
     """
     According to Mayka, M. A., Corcos, D. M., Leurgans, S. E., & Vaillancourt, D. E. (2006):
     Three-dimensional locations and boundaries of motor and premotor cortices as defined by functional brain imaging: a meta-analysis. NeuroImage, 31(4), 14531474. https://doi.org/10.1016/j.neuroimage.2006.02.004
@@ -78,7 +102,7 @@ def get_M1(hemisphere="L", cosys="MNI") -> List[float]:
     if cosys == "MNI":
         M1 = [-36.6300, -17.6768, 54.3147]
     elif cosys == "Tailarach":
-        M1 = [-37, -21, 58]
+        M1 = [-37.0, -21.0, 58.0]
     else:
         raise NotImplementedError("Unknown coordinate system")
     if hemisphere == "R":
@@ -90,87 +114,66 @@ def get_M1(hemisphere="L", cosys="MNI") -> List[float]:
         raise NotImplementedError("Unknown hemisphere")
 
 
-def classify_hemisphere(coords: TargetCoords) -> List[str]:
-    from numpy.linalg import norm
+def classify_hemisphere(
+    coords: List[Coordinate],
+) -> Tuple[List[str], Coordinate, Coordinate]:
+    """for each coordinate, assign whether it lies in the right or left hemisphere
 
-    rM1 = get_M1("R")
-    lM1 = get_M1("L")
-    coords = np.atleast_2d(coords)
+    args
+    ----
+    coords: List[Coordinate]
+        a list of target coordinates
+
+    returns
+    -------
+    hemisphere: List[str]
+        a list of strings (either "L", or "R", or "V" for vertex line) describing the hemisphere
+    lCoG: Coordinate
+        Center of Gravity of coordinates assigned to left hemisphere
+    rCoG: Coordinate
+        Center of Gravity of coordinates assigned to right hemisphere
+
+    """
+
     hemi = []
-    left = []
     right = []
+    left = []
     for pos in coords:
-        rd = norm(pos - rM1)
-        ld = norm(pos - lM1)
-        if rd < ld:
+        if pos[0] < 0:
+            left.append(pos)
+            hemi.append("L")
+        elif pos[0] > 0:
             right.append(pos)
             hemi.append("R")
         else:
-            left.append(pos)
-            hemi.append("L")
-    return hemi
+            hemi.append("V")
+
+    MISSING_COG = [np.NaN] * 3
+    lCoG = np.mean(left, 0).tolist() if len(left) != 0 else MISSING_COG
+    rCoG = np.mean(right, 0).tolist() if len(right) != 0 else MISSING_COG
+    return hemi, lCoG, rCoG
 
 
 def shift_origin(coords: List[List[float]]) -> List[List[float]]:
-    if len(coords) == 0:
-        return coords
-    from numpy.linalg import norm
-
-    rM1 = get_M1("R")
-    lM1 = get_M1("L")
-    coords = np.atleast_2d(coords)
-    cog = np.mean(coords, 0)
-    # take either left or right M1 depending on distance of Cog
-    rd = norm(cog - rM1)
-    ld = norm(cog - lM1)
-    M1 = rM1 if rd < ld else lM1
-    shift = cog - M1
-    shifted = []
-    for pos in coords:
-        shifted.append((pos - shift).tolist())
-    return shifted
-
-
-def split_shift_origin(coords: List[List[float]]) -> List[List[float]]:
-    if len(coords) == 0:
-        return coords
-    from numpy.linalg import norm
-
-    rM1 = get_M1("R")
-    lM1 = get_M1("L")
-    coords = np.atleast_2d(coords)
-    hemi = []
-    left = []
-    right = []
-    for pos in coords:
-        rd = norm(pos - rM1)
-        ld = norm(pos - lM1)
-        if rd < ld:
-            right.append(pos)
-            hemi.append("R")
-        else:
-            left.append(pos)
-            hemi.append("L")
-    if len(left) == 0 or len(right) == 0:
-        ## all points are right or left, can do a regular
-        return shift_origin(coords)
-
-    lCoG = np.mean(left, 0)
-    rCoG = np.mean(right, 0)
-    rshift = rCoG - rM1
-    lshift = lCoG - lM1
+    hemi, lcog, rcog = classify_hemisphere(coords)
+    rshift = np.atleast_2d(rcog) - np.atleast_2d(get_M1("R"))
+    lshift = np.atleast_2d(lcog) - np.atleast_2d(get_M1("L"))
+    vshift = np.atleast_2d([0, rshift[0][1], rshift[0][2]])
     shifted = []
     for h, pos in zip(hemi, coords):
         if h == "R":
-            shifted.append((pos - rshift).tolist())
+            shifted.append((pos - rshift).tolist()[0])
+        elif h == "L":
+            shifted.append((pos - lshift).tolist()[0])
         else:
-            shifted.append((pos - lshift).tolist())
+            shifted.append((pos - vshift).tolist()[0])
+
     return shifted
 
 
-def convert_xml_to_coords(xmlfile: str, normalize: bool = False) -> TargetCoords:
+def convert_xml_to_coords(xmlfile: str, normalize: bool = False) -> List[Coordinate]:
     root = ET.parse(xmlfile).getroot()
     coords = parse(root)
     if normalize:
-        coords = split_shift_origin(coords)
+        coords = shift_origin(coords)
     return coords

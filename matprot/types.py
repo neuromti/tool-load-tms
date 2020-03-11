@@ -8,6 +8,6 @@ FileName = Union[str, Path]  #: The name of a file in the operating system
 
 MatFileContent = Dict[str, ndarray]  # the content of a converted mat-file
 
-TargetCoords = Dict[
-    int, Tuple[float, float, float]
-]  # a dictionary of coordinates per target
+Coordinate = Tuple[
+    float, float, float
+]  #: A coordinate tripled, i.e. x, y, z coordinates
