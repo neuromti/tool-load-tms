@@ -185,3 +185,4 @@ def cut_into_traces(
         trial = padded[a:b]
         traces.append(trial)
     return traces
+
