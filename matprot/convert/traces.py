@@ -15,10 +15,7 @@ from tempfile import mkdtemp
 import atexit
 from shutil import rmtree
 from typing import List, Dict
-from numpy import ndarray
-
-TraceData = ndarray
-MatFileContent = Dict[str, ndarray]
+from matprot.types import TraceData, MatFileContent, FileName
 
 
 class TmpDir:
@@ -46,7 +43,7 @@ class TmpDir:
 tmpdir = TmpDir()
 
 # -----------------------------------------------------------------------------
-def create_matlab_commands(matfile: str) -> Path:
+def create_matlab_commands(matfile: FileName) -> Path:
     """create an mfile to convert the object in a matfile
 
     args
@@ -73,7 +70,7 @@ def create_matlab_commands(matfile: str) -> Path:
     return tmpdir.mfile
 
 
-def create_shell_commands(mfile: str) -> List[str]:
+def create_shell_commands(mfile: FileName) -> List[str]:
     "create the bash command to start matlab converting an automated-mat"
     command = "-r \"run('{mfile}'); exit;\""
     commands = [
@@ -86,7 +83,7 @@ def create_shell_commands(mfile: str) -> List[str]:
     return commands
 
 
-def convert_mat(fname: str) -> MatFileContent:
+def convert_mat(fname: FileName) -> MatFileContent:
     "convert an automated-mat to a python dictionary"
     tmpdir.refresh()
     create_matlab_commands(fname)
@@ -121,7 +118,7 @@ def get_fs(content: MatFileContent) -> int:
     return int(content["fs"][0][0])
 
 
-def get_channel(content: MatFileContent, target_channel: str) -> ndarray:
+def get_channel(content: MatFileContent, target_channel: str) -> TraceData:
     "return the full trace for a single channel"
     try:
         channel_index = np.where(content["chan_names"][0] == target_channel)[0][0]
@@ -186,3 +183,20 @@ def cut_into_traces(
         traces.append(trial)
     return traces
 
+
+def convert_mat_to_traces(
+    matfile: FileName,
+    target_channel: str,
+    pre_in_ms: float = 100,
+    post_in_ms: float = 100,
+) -> List[TraceData]:
+    "convert a matfile to a list of traces"
+
+    content = convert_mat(matfile)
+    traces = cut_into_traces(
+        content=content,
+        target_channel=target_channel,
+        pre_in_ms=pre_in_ms,
+        post_in_ms=post_in_ms,
+    )
+    return traces
