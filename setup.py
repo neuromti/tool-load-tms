@@ -1,10 +1,13 @@
 from distutils.core import setup
 import setuptools
-from os import path
+from pathlib import Path
 
-this_directory = path.abspath(path.dirname(__file__))
-with open(path.join(this_directory, "readme.md"), encoding="utf-8") as f:
+thisdirectory = Path(__file__).parent
+with (thisdirectory / "readme.md").open() as f:
     long_description = f.read()
+
+with (thisdirectory / "requirements.txt").open() as f:
+    install_requires = [l.strip() for l in f.readlines()]
 
 setup(
     name="matprot",
@@ -16,6 +19,7 @@ setup(
     url="https://github.com/translationalneurosurgery/tool-load-tms.git",
     download_url="https://github.com/translationalneurosurgery/tool-load-tms.git",
     license="MIT",
+    install_requires=install_requires,
     packages=setuptools.find_packages(),
     package_data={"matprot": ["ml/*.m"]},
     entry_points={"console_scripts": [],},

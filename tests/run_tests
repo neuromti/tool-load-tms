@@ -1,7 +1,6 @@
 #!/bin/bash
 virtualenv .env
 source .env/bin/activate
-pip install -r requirements.txt
 pip install -r tests/requirements.txt
 pip install dist/*.whl
 mypy
