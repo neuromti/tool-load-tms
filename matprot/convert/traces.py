@@ -106,15 +106,7 @@ def convert_mat(fname: FileName) -> MatFileContent:
     return content
 
 
-def is_matlab_installed() -> bool:
-    "returns true if a matlab installation was found, false otherwise"
-    try:
-        ret = subprocess.run(
-            ["matlab", "-help"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        return ret.stderr == b""
-    except FileNotFoundError:
-        return False
+# -----------------------------------------------------------------------------
 
 
 def get_fs(content: MatFileContent) -> int:
@@ -138,11 +130,30 @@ def get_onsets(content: MatFileContent) -> List[int]:
     return content["stim_onset"][:, 0].tolist()
 
 
+def get_enames(content: MatFileContent) -> List[str]:
+    "return the name of the events in matfile content"
+    sc = content["stim_code"].tolist()
+    return [str(sc[0]) for sc in sc]
+
+
+# -----------------------------------------------------------------------------
+def is_matlab_installed() -> bool:
+    "returns true if a matlab installation was found, false otherwise"
+    try:
+        ret = subprocess.run(
+            ["matlab", "-help"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        return ret.stderr == b""
+    except FileNotFoundError:
+        return False
+
+
 def cut_into_traces(
     content: MatFileContent,
     target_channel: str,
-    pre_in_ms: float = 500,
-    post_in_ms: float = 500,
+    pre_in_samples: int = 100,
+    post_in_samples: int = 100,
+    onsets=List[int],
 ) -> List[TraceData]:
     """cut data recorded with automated-mat into epochs
 
@@ -152,11 +163,12 @@ def cut_into_traces(
         the content of a matfile converted via :func:`convert_mat`
     target_channele: str
         which channel to cut
-    pre_in_ms:float
-        how many milliseconds to cut before the TMS pulse
-    post_in_ms:float
-        how many milliseconds to cut after the TMS pulse
-
+    pre_in_samples: int    
+        how many samples to cut before the TMS pulse
+    post_in_samples: int
+        how many samples to cut after the TMS pulse
+    onsets:List[int]
+        when TMS was triggered
     returns
     -------
     traces: List[TraceData]
@@ -164,12 +176,6 @@ def cut_into_traces(
 
     """
     full_trace = get_channel(content, target_channel)
-    fs = get_fs(content)
-    onsets = get_onsets(content)
-
-    # convert pre/post from ms to samples
-    pre_in_samples = int(pre_in_ms * fs / 1000)
-    post_in_samples = int(post_in_ms * fs / 1000)
 
     # pad the signal to make sure we have enough data left and right of
     # the stimulus. padding is done to the left and right by default
@@ -185,23 +191,5 @@ def cut_into_traces(
         a, b = onset - pre_in_samples, onset + post_in_samples
         trial = padded[a:b]
         traces.append(trial)
-    return traces
-
-
-def convert_mat_to_traces(
-    matfile: FileName,
-    target_channel: str,
-    pre_in_ms: float = 100,
-    post_in_ms: float = 100,
-) -> List[TraceData]:
-    "convert a matfile to a list of traces"
-
-    content = convert_mat(matfile)
-    traces = cut_into_traces(
-        content=content,
-        target_channel=target_channel,
-        pre_in_ms=pre_in_ms,
-        post_in_ms=post_in_ms,
-    )
     return traces
 

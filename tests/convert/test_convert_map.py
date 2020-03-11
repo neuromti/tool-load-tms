@@ -47,27 +47,10 @@ def test_create_shell_commands(matfile):
 
 @pytest.mark.skipif(is_matlab_installed() == False, reason="Matlab is not installed")
 def test_convert_mat(matfile):
+    tmpdir.refresh()
     out = convert_mat(matfile)
     assert "chan_names" in out.keys()
     assert "stim_onset" in out.keys()
     assert "data" in out.keys()
     for k, v in out.items():
         print(k, type(v))
-
-
-def test_cut_into_traces():
-    import numpy as np
-
-    chan_names = np.asanyarray([["Fpz", "Cz", "EDC_L"]])
-    fs = np.asanyarray([[5000]])
-    stim_onset = np.asanyarray([[3749], [9224]])
-    data = np.random.randn(10000, 3)
-    content: MatFileContent
-    content = {
-        "chan_names": chan_names,
-        "fs": fs,
-        "stim_onset": stim_onset,
-        "data": data,
-    }
-    traces = cut_into_traces(content, target_channel="EDC_L")
-    assert len(traces) == 2
