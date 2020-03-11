@@ -1,4 +1,10 @@
-"convert matlab files"
+"""
+Map
+---
+
+Convert the matlab file which contains the electrophysiological data to a file readable with python
+
+"""
 
 from scipy.io import loadmat
 from pathlib import Path
@@ -8,6 +14,7 @@ from scipy.signal import resample
 from tempfile import mkdtemp
 import atexit
 from shutil import rmtree
+from typing import List
 
 
 class TmpDir:
@@ -27,6 +34,9 @@ class TmpDir:
             self.matfile.unlink()
         if self.mfile.exists():
             self.mfile.unlink()
+
+    def exists(self):
+        return self.tmpdir.exists()
 
 
 tmpdir = TmpDir()
@@ -50,7 +60,7 @@ def create_m_cmds(fname: str):
     return tmpdir.mfile, tmpdir.matfile
 
 
-def create_bash_cmd(mfile: str) -> str:
+def create_bash_cmd(mfile: str) -> List[str]:
     "create the bash command to start matlab converting an automated-mat"
     command = "-r \"run('{mfile}'); exit;\""
     commands = [
@@ -69,11 +79,8 @@ def convert_mat(fname: str) -> dict:
     try:
         commands = create_bash_cmd(mfile)
 
-        if (
-            subprocess.run(
-                commands, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
-            ~= 0
+        if subprocess.run(
+            commands, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         ):
             content = loadmat(matfile)
         else:
