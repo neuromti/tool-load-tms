@@ -16,6 +16,7 @@ import atexit
 from shutil import rmtree
 from typing import List, Dict
 from matprot.types import TraceData, MatFileContent, FileName
+from sys import platform
 
 
 class TmpDir:
@@ -94,13 +95,16 @@ def convert_mat(fname: FileName) -> MatFileContent:
     assert tmpdir.mfile.exists()
     try:
         commands = create_shell_commands(tmpdir.mfile)
-
-        if subprocess.run(
-            commands, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        ):
-            content = loadmat(tmpdir.matfile)
-        else:
-            raise Exception("Conversion was not successfull")
+        print("MATPROT: Running on {platform}")
+        if "win" in platform:
+            commands = " ".join(commands)
+        print(f"MATPROT: executing {commands}")
+        subprocess.run(commands, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        content = loadmat(tmpdir.matfile)
+    except Exception as e:
+        print("MATPROT: Conversion was not successfull due to:", e)
+        if not is_matlab_installed():
+            print("MATPROT: Found no matlab installation")
     finally:
         tmpdir.refresh()
     return content
@@ -192,4 +196,3 @@ def cut_into_traces(
         trial = padded[a:b]
         traces.append(trial)
     return traces
-
