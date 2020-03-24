@@ -14,7 +14,7 @@ from scipy.signal import resample
 from tempfile import mkdtemp
 import atexit
 from shutil import rmtree
-from typing import List, Dict
+from typing import List, Dict, Union
 from matprot.types import TraceData, MatFileContent, FileName
 from sys import platform
 
@@ -94,6 +94,7 @@ def convert_mat(fname: FileName) -> MatFileContent:
     create_matlab_commands(fname)
     assert tmpdir.mfile.exists()
     try:
+        commands: Union[str, List[str]]
         commands = create_shell_commands(tmpdir.mfile)
         print(f"MATPROT: Running on {platform}")
         if "win" in platform:
