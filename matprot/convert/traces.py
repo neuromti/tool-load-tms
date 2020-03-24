@@ -21,7 +21,7 @@ from sys import platform
 
 class TmpDir:
     def __init__(self):
-        self.tmpdir = Path(mkdtemp())
+        self.tmpdir = Path(mkdtemp()).expanduser().absolute()
         self.matfile = self.tmpdir / "conversion.mat"
         self.mfile = self.tmpdir / "conversion.m"
         assert self.tmpdir.exists()
@@ -95,7 +95,7 @@ def convert_mat(fname: FileName) -> MatFileContent:
     assert tmpdir.mfile.exists()
     try:
         commands = create_shell_commands(tmpdir.mfile)
-        print("MATPROT: Running on {platform}")
+        print(f"MATPROT: Running on {platform}")
         if "win" in platform:
             commands = " ".join(commands)
         print(f"MATPROT: executing {commands}")
