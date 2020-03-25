@@ -18,7 +18,6 @@ from typing import List, Dict, Union
 from matprot.types import TraceData, MatFileContent, FileName
 from sys import platform
 
-
 class TmpDir:
     def __init__(self):
         self.tmpdir = Path(mkdtemp()).expanduser().absolute()
@@ -67,7 +66,7 @@ def create_matlab_commands(matfile: FileName) -> Path:
 
     template = """ addpath(\'{addpath}\');
     [data, fs, chan_names, stim_onset, stim_code, mso, subid, recdate] = load_all(\'{fname}\');
-    save(\'{savefile}\', 'data', 'fs', 'chan_names', 'stim_onset', 'stim_code', 'mso', 'subid', 'recdate');"""
+    save(\'{savefile}\', 'data', 'fs', 'chan_names', 'stim_onset', 'stim_code', 'mso', 'subid', 'recdate'); exit;"""
 
     matfile = Path(matfile).expanduser().absolute()
     if not matfile.exists():
@@ -83,14 +82,14 @@ def create_matlab_commands(matfile: FileName) -> Path:
 def create_shell_commands(mfile: FileName) -> List[str]:
     "create the bash command to start matlab converting an automated-mat"
     if "win" in platform:
-            command = "-r ""run('{mfile}');""" # removes extra slashes
+        command = "-r ""run('{mfile}'); exit force;""" # removes extra slashes
     else:
         command = "-r \"run('{mfile}'); exit;\""
     commands = [
         "matlab",
-        "-wait",
-        "-nodesktop",
         "-nosplash",
+        "-nodesktop",
+        "-wait",
         "-nodisplay",
         command.format(mfile=mfile)]
     return commands
@@ -118,7 +117,7 @@ def convert_mat(fname: FileName) -> MatFileContent:
         if not is_matlab_installed():
             print("MATPROT: Found no matlab installation")
     finally:
-        print(content)
+        tmpdir.refresh()
     return content
 
 
