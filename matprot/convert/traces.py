@@ -64,11 +64,10 @@ def create_matlab_commands(matfile: FileName) -> Path:
     # [data, fs, chan_names, stim_onset, stim_code, mso, subid, recdate] = load_all(\"{fname}\");
     # save(\"{savefile}\", "data", "fs", "chan_names", "stim_onset", "stim_code", "mso", "subid", "recdate");
     # """
-    template = """
-    addpath(\'{addpath}\')
+
+    template = """ addpath(\'{addpath}\');
     [data, fs, chan_names, stim_onset, stim_code, mso, subid, recdate] = load_all(\'{fname}\');
-    save(\'{savefile}\', 'data', 'fs', 'chan_names', 'stim_onset', 'stim_code', 'mso', 'subid', 'recdate');
-    """
+    save(\'{savefile}\', 'data', 'fs', 'chan_names', 'stim_onset', 'stim_code', 'mso', 'subid', 'recdate');"""
 
     matfile = Path(matfile).expanduser().absolute()
     if not matfile.exists():
@@ -83,14 +82,17 @@ def create_matlab_commands(matfile: FileName) -> Path:
 
 def create_shell_commands(mfile: FileName) -> List[str]:
     "create the bash command to start matlab converting an automated-mat"
-    command = "-r \"run('{mfile}'); exit;\""
+    if "win" in platform:
+            command = "-r ""run('{mfile}');""" # removes extra slashes
+    else:
+        command = "-r \"run('{mfile}'); exit;\""
     commands = [
         "matlab",
+        "-wait",
         "-nodesktop",
         "-nosplash",
         "-nodisplay",
-        command.format(mfile=mfile),
-    ]
+        command.format(mfile=mfile)]
     return commands
 
 
@@ -105,15 +107,18 @@ def convert_mat(fname: FileName) -> MatFileContent:
         print(f"MATPROT: Running on {platform}")
         if "win" in platform:
             commands = " ".join(commands)
-        print(f"MATPROT: executing {commands}")
-        subprocess.run(commands, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print(f"MATPROT: executing {commands}")
+            subprocess.run(commands)
+        else:
+            print(f"MATPROT: executing {commands}")
+            subprocess.run(commands, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         content = loadmat(tmpdir.matfile)
     except Exception as e:
         print("MATPROT: Conversion was not successfull due to:", e)
         if not is_matlab_installed():
             print("MATPROT: Found no matlab installation")
     finally:
-        tmpdir.refresh()
+        print(content)
     return content
 
 
