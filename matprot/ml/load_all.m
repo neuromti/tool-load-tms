@@ -17,8 +17,9 @@ function [data, fs, chan_names, stim_onset, stim_code, mso, subid, recdate]  = l
         recdate = datetime(obj.dataSub.date);
         recdate = [recdate.Year, recdate.Month, recdate.Day];
     catch ME
-        disp("Error in datefield")
-        recdate = [0, 0, 0];
+        recdate = obj.dataSub.initials(6:16);        
+        recdate = datevec(recdate);
+        recdate = [recdate(1), recdate(2), recdate(3)];
     end
     
     
