@@ -7,3 +7,4 @@ htmlcov/*
 .coverage
 build/*
 dist/*
+tests/htmlcov/*
