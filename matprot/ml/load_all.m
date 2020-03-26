@@ -12,8 +12,13 @@ function [data, fs, chan_names, stim_onset, stim_code, mso, subid, recdate]  = l
     stim_onset = find(diff(stim_chan)>0)+1;
     stim_code = stim_chan(stim_onset)*10;
     mso = obj.tms_settings.int_MSO;
-    subid = obj.dataSub.initials(1:4);    
-    recdate = datetime(obj.dataSub.date);
-    recdate = [recdate.Year, recdate.Month, recdate.Day];
+    subid = obj.dataSub.initials(1:4);
+    try
+        recdate = datetime(obj.dataSub.date);
+        recdate = [recdate.Year, recdate.Month, recdate.Day];
+    catch ME
+        disp("Error in datefield")
+        recdate = [0, 0, 0];
+    end
     
     
