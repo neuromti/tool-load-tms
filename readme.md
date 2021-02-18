@@ -22,3 +22,5 @@ onsets = [onset[0] for onset in content['stim_onset']]
 # cut from 100 before to 100 samples after each onset
 traces = cut_into_traces(content, "EDC_L", 100, 100,  onsets)
 ```
+
+[![cut traces video](https://img.youtube.com/vi/be6HDzV27QI/0.jpg)](https://www.youtube.com/watch?v=be6HDzV27QI)
