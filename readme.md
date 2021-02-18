@@ -16,6 +16,9 @@ content = convert_mat("path_to.mat")
 print(content['chan_names'])
 # e.g. [[array(['EDC_L'], dtype='<U5') array(['BB_L'], dtype='<U4')
 #        array(['EDC_R'], dtype='<U5')]]
+# convert the array of onset sample indices into a list of integers
 onsets = [onset[0] for onset in content['stim_onset']]
+# select an existing channel, and
+# cut from 100 before to 100 samples after each onset
 traces = cut_into_traces(content, "EDC_L", 100, 100,  onsets)
 ```
