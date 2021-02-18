@@ -22,7 +22,7 @@ setup(
     install_requires=install_requires,
     packages=setuptools.find_packages(),
     package_data={"matprot": ["ml/*.m"]},
-    entry_points={"console_scripts": [],},
+    entry_points={"console_scripts": ["matprot=matprot.__main__:main",],},
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",

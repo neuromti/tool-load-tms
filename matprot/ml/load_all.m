@@ -11,7 +11,11 @@ function [data, fs, chan_names, stim_onset, stim_code, mso, subid, recdate]  = l
     stim_chan = obj.dataEEGEMG(:,end);
     stim_onset = find(diff(stim_chan)>0)+1;
     stim_code = stim_chan(stim_onset)*10;
-    mso = obj.tms_settings.int_MSO;
+    try
+        mso = obj.tms_settings.int_MSO;
+    catch ME
+        mso = 0;
+    end
     subid = obj.dataSub.initials(1:4);
     try
         recdate = datetime(obj.dataSub.date);

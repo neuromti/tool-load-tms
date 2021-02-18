@@ -18,6 +18,7 @@ from typing import List, Dict, Union
 from matprot.types import TraceData, MatFileContent, FileName
 from sys import platform
 
+
 class TmpDir:
     def __init__(self):
         self.tmpdir = Path(mkdtemp()).expanduser().absolute()
@@ -72,7 +73,9 @@ def create_matlab_commands(matfile: FileName) -> Path:
     if not matfile.exists():
         raise FileNotFoundError(f"{matfile} not found")
     addpath = str(Path(__file__).parent.parent / "ml")
-    content = template.format(addpath=addpath, fname=matfile, savefile=tmpdir.matfile)
+    content = template.format(
+        addpath=addpath, fname=matfile, savefile=tmpdir.matfile
+    )
     tmpdir.refresh()
     with tmpdir.mfile.open("w") as f:
         print(content, file=f)
@@ -82,7 +85,9 @@ def create_matlab_commands(matfile: FileName) -> Path:
 def create_shell_commands(mfile: FileName) -> List[str]:
     "create the bash command to start matlab converting an automated-mat"
     if "win" in platform:
-        command = "-r ""run('{mfile}'); exit force;""" # removes extra slashes
+        command = (
+            "-r " "run('{mfile}'); exit force;" ""
+        )  # removes extra slashes
     else:
         command = "-r \"run('{mfile}'); exit;\""
     commands = [
@@ -91,7 +96,8 @@ def create_shell_commands(mfile: FileName) -> List[str]:
         "-nodesktop",
         "-wait",
         "-nodisplay",
-        command.format(mfile=mfile)]
+        command.format(mfile=mfile),
+    ]
     return commands
 
 
@@ -110,7 +116,9 @@ def convert_mat(fname: FileName) -> MatFileContent:
             subprocess.run(commands)
         else:
             print(f"MATPROT: executing {commands}")
-            subprocess.run(commands, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(
+                commands, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
         content = loadmat(tmpdir.matfile)
     except Exception as e:
         print("MATPROT: Conversion was not successfull due to:", e)
@@ -132,9 +140,13 @@ def get_fs(content: MatFileContent) -> int:
 def get_channel(content: MatFileContent, target_channel: str) -> TraceData:
     "return the full trace for a single channel"
     try:
-        channel_index = np.where(content["chan_names"][0] == target_channel)[0][0]
+        channel_index = np.where(content["chan_names"][0] == target_channel)[
+            0
+        ][0]
     except IndexError:
-        raise IndexError(f"{target_channel} was not found in the available channels!")
+        raise IndexError(
+            f"{target_channel} was not found in the available channels!"
+        )
 
     full_trace = content["data"][:, channel_index]
     return full_trace
