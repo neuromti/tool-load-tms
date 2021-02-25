@@ -103,6 +103,7 @@ def create_shell_commands(mfile: FileName) -> List[str]:
 
 def convert_mat(fname: FileName) -> MatFileContent:
     "convert an automated-mat to a python dictionary"
+    content = None
     tmpdir.refresh()
     create_matlab_commands(fname)
     assert tmpdir.mfile.exists()
@@ -114,10 +115,18 @@ def convert_mat(fname: FileName) -> MatFileContent:
             commands = " ".join(commands)
             print(f"MATPROT: executing {commands}")
             subprocess.run(commands)
-        else:
+        elif "linux" in platform:
             print(f"MATPROT: executing {commands}")
             subprocess.run(
                 commands, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+        else:  # MacOS
+            print(f"MATPROT: executing {commands}")
+            subprocess.run(
+                commands,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                shell=True,
             )
         content = loadmat(tmpdir.matfile)
     except Exception as e:
@@ -126,7 +135,11 @@ def convert_mat(fname: FileName) -> MatFileContent:
             print("MATPROT: Found no matlab installation")
     finally:
         tmpdir.refresh()
-    return content
+
+    if content is None:
+        raise Exception(f"{tmpdir.matfile} has no content")
+    else:
+        return content
 
 
 # -----------------------------------------------------------------------------
