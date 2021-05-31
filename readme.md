@@ -24,3 +24,8 @@ traces = cut_into_traces(content, "EDC_L", 100, 100,  onsets)
 ```
 
 [![cut traces video](https://img.youtube.com/vi/be6HDzV27QI/0.jpg)](https://www.youtube.com/watch?v=be6HDzV27QI)
+
+
+#### See also
+https://github.com/neuromti/TMS_Toolbox
+https://github.com/neuromti/UKT_toolbox
