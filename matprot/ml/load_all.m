@@ -14,7 +14,7 @@ function [data, fs, chan_names, stim_onset, stim_code, mso, subid, recdate] = lo
         stim_code = stim_chan(stim_onset) * 10;
         subid = obj.dataSub.initials(1:4);
     catch ME
-        disp(ME.message)
+        disp(ME.message);
         return
 
     end

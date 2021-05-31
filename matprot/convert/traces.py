@@ -6,7 +6,6 @@ Convert the matlab file which contains the electrophysiological data to a file r
 
 """
 
-from email.mime import base
 from scipy.io import loadmat
 from pathlib import Path
 import subprocess
@@ -101,7 +100,6 @@ def create_shell_commands(mfile: FileName) -> List[str]:
         "matlab",
         "-nosplash",
         "-nodesktop",
-        "-wait",
         "-nodisplay",
         command.format(mfile=mfile),
     ]
@@ -132,20 +130,23 @@ def convert_mat(fname: FileName) -> MatFileContent:
         if "win" in platform:
             commands = " ".join(commands)
             print(f"MATPROT: executing {commands}")
-            subprocess.run(commands)
+            out = subprocess.run(
+                commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
         elif "linux" in platform:
             print(f"MATPROT: executing {commands}")
-            subprocess.run(
-                commands, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            out = subprocess.run(
+                commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
         else:  # MacOS
             print(f"MATPROT: executing {commands}")
-            subprocess.run(
+            out = subprocess.run(
                 commands,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 shell=True,
             )
+        print("MATPROT: ", out.stdout.decode())
         content = loadmat(tmpdir.matfile)
     except Exception as e:
         print("MATPROT: Conversion was not successfull due to:", e)
