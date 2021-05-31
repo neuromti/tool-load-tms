@@ -6,6 +6,7 @@ Convert the matlab file which contains the electrophysiological data to a file r
 
 """
 
+from email.mime import base
 from scipy.io import loadmat
 from pathlib import Path
 import subprocess
@@ -65,7 +66,9 @@ def create_matlab_commands(matfile: FileName) -> Path:
     # save(\"{savefile}\", "data", "fs", "chan_names", "stim_onset", "stim_code", "mso", "subid", "recdate");
     # """
 
-    template = """ addpath(\'{addpath}\');
+    template = """ 
+    addpath(\'{addpath}\');
+    addpath(\'{basepath}\');
     [data, fs, chan_names, stim_onset, stim_code, mso, subid, recdate] = load_all(\'{fname}\');
     save(\'{savefile}\', 'data', 'fs', 'chan_names', 'stim_onset', 'stim_code', 'mso', 'subid', 'recdate'); exit;"""
 
@@ -73,8 +76,12 @@ def create_matlab_commands(matfile: FileName) -> Path:
     if not matfile.exists():
         raise FileNotFoundError(f"{matfile} not found")
     addpath = str(Path(__file__).parent.parent / "ml")
+    basepath = str(Path(__file__).parent.parent / "ml" / "base")
     content = template.format(
-        addpath=addpath, fname=matfile, savefile=tmpdir.matfile
+        addpath=addpath,
+        basepath=basepath,
+        fname=matfile,
+        savefile=tmpdir.matfile,
     )
     tmpdir.refresh()
     with tmpdir.mfile.open("w") as f:
@@ -102,7 +109,18 @@ def create_shell_commands(mfile: FileName) -> List[str]:
 
 
 def convert_mat(fname: FileName) -> MatFileContent:
-    "convert an automated-mat to a python dictionary"
+    """convert an automated-mat to a python dictionary
+    
+    args
+    ----
+    fname: Union[str, Path]
+        Path to the .mat file to be converted
+
+    returns
+    ------
+    content: MatFileContent
+        a dictionary of the content of the .mat file
+    """
     content = None
     tmpdir.refresh()
     create_matlab_commands(fname)
